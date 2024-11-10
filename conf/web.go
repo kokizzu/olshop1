@@ -15,7 +15,7 @@ type WebConf struct {
 func EnvWebConf() WebConf {
 	webProtoDomain := os.Getenv("WEB_PROTO_DOMAIN")
 	if webProtoDomain == `` {
-		webProtoDomain = `http://localhost:1234`
+		webProtoDomain = `http://localhost:12345`
 	}
 
 	return WebConf{

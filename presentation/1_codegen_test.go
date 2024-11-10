@@ -26,7 +26,7 @@ func BenchmarkGenerateViews(b *testing.B) {
 		DomainDir: "../domain",
 		SvelteDir: "../svelte",
 
-		ProjectName: "street",
+		ProjectName: "olshop1",
 
 		ActionsGenFile:   "./actions.GEN.go",
 		ApiRoutesGenFile: "./api_routes.GEN.go",

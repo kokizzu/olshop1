@@ -1,3 +1,5 @@
 .idea
 cockroach1
 .env.override
+tmp
+*.fiber.gz

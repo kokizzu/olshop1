@@ -8,6 +8,8 @@ setup:
 	go install golang.org/x/tools/cmd/goimports@latest
 	#curl -fsSL https://get.pnpm.io/install.sh | bash -
 	curl -fsSL https://bun.sh/install | bash
+	cd svelte ; pnpm i
+	# alt: task/Taskfile
 
 local-postgres:
 	docker exec -it olshop1-cockroach1-1 cockroach sql --insecure
@@ -18,3 +20,12 @@ modtidy:
 views:
 	# generate views and routes
 	./gen-views.sh
+
+startdeps:
+	docker compose up
+
+startbe:
+	air
+
+startfe:
+	cd svelte; npm run dev

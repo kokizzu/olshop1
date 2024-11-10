@@ -84,11 +84,11 @@ func (w *WebServer) Start(log *zerolog.Logger) {
 	})
 
 	// check if actionLogs are there, if error, then you need to run migration: go run main.go migrate
-	w.InsertActionLog(&domain.RequestCommon{
-		UserAgent: "server",
-		IpAddress: "127.0.0.1",
-		Action:    "server/start",
-	}, &domain.ResponseCommon{})
+	//w.InsertActionLog(&domain.RequestCommon{
+	//	UserAgent: "server",
+	//	IpAddress: "127.0.0.1",
+	//	Action:    "server/start",
+	//}, &domain.ResponseCommon{})
 
 	// load svelte templates
 	views = &Views{}
@@ -112,8 +112,6 @@ func (w *WebServer) Start(log *zerolog.Logger) {
 
 	// API routes (POST)
 	ApiRoutes(fw, w.Domain)
-
-	//zImport.GoogleSheetCountryDataToJson("1TmAjrclFHUwDA1487ifQjX4FzYt9y7eJ0gwyxtwZMJU")
 
 	// finally serve static files from svelte directory if any
 	fw.Static(`/`, `./svelte`, fiber.Static{

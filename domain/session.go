@@ -29,8 +29,6 @@ type Session struct {
 	ExpiredAt int64 // in seconds
 	Email     string
 
-	Country string
-
 	// not saved but retrieved from SUPERADMIN_EMAILS env
 	IsSuperAdmin bool
 
@@ -219,17 +217,15 @@ func (d *Domain) MustLogin(in RequestCommon, out *ResponseCommon) (res *Session)
 		return nil
 	}
 
-	session := rqAuth.NewSessions(d.AuthOltp)
+	session := mAuth.NewSessionsMutator(d.Postgres)
 	session.SessionToken = in.SessionToken
 
-	loggedUser := rqAuth.NewUsers(d.AuthOltp)
+	loggedUser := mAuth.NewUsersMutator(d.Postgres)
 	loggedUser.Id = sess.UserId
 	if !loggedUser.FindById() {
 		out.SetError(400, UserNotFound)
 		return nil
 	}
-
-	sess.Country = loggedUser.Country
 
 	if !session.FindBySessionToken() {
 		out.SetError(498, ErrSessionTokenNotFound)

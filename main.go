@@ -8,6 +8,7 @@ import (
 
 	"olshop1/conf"
 	"olshop1/domain"
+	"olshop1/model/mAuth"
 	"olshop1/presentation"
 
 	"github.com/kokizzu/gotro/D/Pg"
@@ -57,6 +58,7 @@ func main() {
 	eg.Go(func() error {
 		pConf := conf.EnvPostgres()
 		pConn = pConf.Connect()
+		return pConn.Ping(context.Background())
 	})
 
 	L.PanicIf(eg.Wait(), `eg.Wait`) // if error, make sure no error on: docker compose up
@@ -94,7 +96,6 @@ func main() {
 		ws := &presentation.WebServer{
 			Domain: d,
 		}
-		conf.LoadCountries("./static/country_data/countries.tsv")
 		ws.Start(log)
 	case `cli`:
 		cli := &presentation.CLI{
@@ -107,7 +108,14 @@ func main() {
 		}
 		cron.Start(log)
 	case `migrate`:
-		model.RunMigration(log, pConn, cConn, pConn, cConn, pConn)
+		user := mAuth.NewUsersMutator(pConn)
+		if !user.Migrate() {
+			log.WithLevel(zerolog.FatalLevel).Msg(`failed migrate user`)
+		}
+		session := mAuth.NewSessionsMutator(pConn)
+		if !session.Migrate() {
+			log.WithLevel(zerolog.FatalLevel).Msg(`failed migrate session`)
+		}
 
 	default:
 		log.Error().Str(`mode`, mode).Msg(`unknown mode`)

@@ -1,12 +1,9 @@
 package domain
 
 import (
-	"github.com/kokizzu/gotro/L"
-	"github.com/kokizzu/gotro/S"
-	"github.com/kokizzu/id64"
+	"olshop1/model/mAuth"
 
-	"street/model/mAuth/rqAuth"
-	"street/model/mAuth/wcAuth"
+	"github.com/kokizzu/gotro/S"
 )
 
 //go:generate gomodifytags -all -add-tags json,form,query,long,msg -transform camelcase --skip-unexported -w -file GuestRegister.go
@@ -23,7 +20,7 @@ type (
 	}
 	GuestRegisterOut struct {
 		ResponseCommon
-		User rqAuth.Users `json:"user" form:"user" query:"user" long:"user" msg:"user"`
+		User mAuth.User `json:"user" form:"user" query:"user" long:"user" msg:"user"`
 
 		verifyEmailUrl string
 	}
@@ -41,7 +38,6 @@ const (
 )
 
 func (d *Domain) GuestRegister(in *GuestRegisterIn) (out GuestRegisterOut) {
-	defer d.InsertActionLog(&in.RequestCommon, &out.ResponseCommon)
 	in.Email = S.Trim(S.ValidateEmail(in.Email))
 	if in.Email == `` {
 		out.SetError(400, ErrGuestRegisterEmailInvalid)
@@ -51,17 +47,15 @@ func (d *Domain) GuestRegister(in *GuestRegisterIn) (out GuestRegisterOut) {
 		out.SetErrorf(400, ErrGuestRegisterPasswordTooShort)
 		return
 	}
-	exists := rqAuth.NewUsers(d.AuthOltp)
+	exists := mAuth.NewUsersMutator(d.Postgres)
 	exists.Email = in.Email
 	if exists.FindByEmail() {
 		out.SetError(400, ErrGuestRegisterEmailUsed)
 		return
 	}
-	user := wcAuth.NewUsersMutator(d.AuthOltp)
+	user := mAuth.NewUsersMutator(d.Postgres)
 	user.Email = in.Email
-	user.SetEncryptedPassword(in.Password, in.UnixNow())
-	user.SecretCode = id64.SID() + S.RandomCB63(1)
-	user.SetGenUniqueUsernameByEmail(in.Email, in.UnixNow())
+	user.SetEncryptedPassword(in.Password)
 
 	user.SetUpdatedAt(in.UnixNow())
 	user.SetCreatedAt(in.UnixNow())
@@ -72,17 +66,8 @@ func (d *Domain) GuestRegister(in *GuestRegisterIn) (out GuestRegisterOut) {
 	out.actor = user.Id
 	out.refId = user.Id
 
-	// send verification link
-	hash := S.EncodeCB63(user.Id, 8)
-	out.verifyEmailUrl = in.Host + `/` + GuestVerifyEmailAction + `?secretCode=` + user.SecretCode + `&hash=` + hash
-
 	user.CensorFields()
-	out.User = user.Users
+	out.User = *user
 
-	d.runSubtask(func() {
-		err := d.Mailer.SendRegistrationEmail(user.Email, out.verifyEmailUrl)
-		L.IsError(err, `SendRegistrationEmail`)
-		// TODO: insert failed event to clickhouse
-	})
 	return
 }
