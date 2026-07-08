@@ -1,4 +1,6 @@
 
+.PHONY: setup local-postgres modtidy views startdeps startbe startfe test verify-dependency-security
+
 setup:
 	go get -u -v github.com/kokizzu/gotro@latest
 	go install github.com/air-verse/air@latest
@@ -29,3 +31,9 @@ startbe:
 
 startfe:
 	cd svelte; npm run dev
+
+test:
+	go test ./...
+
+verify-dependency-security:
+	bash scripts/verify-dependency-security.sh
