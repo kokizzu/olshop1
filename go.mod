@@ -1,6 +1,6 @@
 module olshop1
 
-go 1.25.0
+go 1.26.10
 
 require (
 	github.com/davecgh/go-spew v1.1.1
